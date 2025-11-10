@@ -108,6 +108,19 @@
                         </li>
                     </ul>
                 </li>
+<<<<<<< HEAD
+=======
+
+                <!-- Players Management -->
+                <li class="nav-item">
+                    <a href="{{ url('/admin/players') }}" class="nav-link {{ request()->is('admin/players') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-users"></i>
+                        <p>Daftar Player</p>
+                    </a>
+                </li>
+
+                <!-- Player Profiling is accessible from Daftar Player (inline), so separate search removed -->
+>>>>>>> 3ddae518f9615e7fac29b983be519f8b6ad5b078
                 
             </ul>
         </nav>
@@ -181,6 +194,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+<<<<<<< HEAD
+=======
+
+// openPlayerProfiling removed: profiling is now accessed inline from Daftar Player page
+>>>>>>> 3ddae518f9615e7fac29b983be519f8b6ad5b078
 </script>
 
 <style>
