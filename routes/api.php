@@ -2,10 +2,10 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\LeaderboardController; // <-- Impor Controller Anda
-use App\Http\Controllers\Api\ThresholdController;
-use App\Http\Controllers\Api\ScenarioController;
-use App\Http\Controllers\Api\SessionController;
+use App\Http\Controllers\LeaderboardController; // <-- Impor Controller Anda
+use App\Http\Controllers\ThresholdController;
+use App\Http\Controllers\ScenarioController;
+use App\Http\Controllers\SessionController;
 
 /*
 |--------------------------------------------------------------------------
