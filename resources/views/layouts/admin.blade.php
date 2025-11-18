@@ -57,7 +57,9 @@
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-sm-6">
-                            <h3 class="mb-0">@yield('page-title', 'Dashboard')</h3>
+                            @if(View::hasSection('page-title'))
+  <h1>@yield('page-title')</h1>
+@endif
                         </div>
                         <div class="col-sm-6">
                             <ol class="breadcrumb float-sm-right">

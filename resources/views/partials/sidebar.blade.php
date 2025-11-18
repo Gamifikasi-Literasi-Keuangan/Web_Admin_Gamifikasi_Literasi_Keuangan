@@ -107,7 +107,32 @@
                             </a>
                         </li>
                     </ul>
+
+                <!-- Players Management -->
+                <li class="nav-item">
+                    <a href="{{ url('/admin/players') }}" class="nav-link {{ request()->is('admin/players') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-users"></i>
+                        <p>Daftar Player</p>
+                    </a>
                 </li>
+
+                <!-- Recommendations -->
+                <li class="nav-item">
+                    <a href="{{ route('admin.rekomendasi.index') }}" class="nav-link {{ request()->routeIs('admin.rekomendasi.index') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-lightbulb"></i>
+                        <p>Rekomendasi Pembelajaran</p>
+                    </a>
+                </li>
+                <!-- ...menu sebelumnya... -->
+                <li class="nav-item">
+                <a href="{{ route('admin.learning-path.index') }}" class="nav-link {{ request()->routeIs('admin.learning-path.index') ? 'active' : '' }}">
+                      <p>Learning Path Player</p>
+                </a>
+                </li>
+            </ul>
+        </nav>
+        
+                <!-- Player Profiling is accessible from Daftar Player (inline), so separate search removed -->
                 
             </ul>
         </nav>
@@ -181,6 +206,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// openPlayerProfiling removed: profiling is now accessed inline from Daftar Player page
 </script>
 
 <style>
@@ -223,3 +250,4 @@ document.addEventListener('DOMContentLoaded', function() {
 .nav-icon.text-warning { color: #ffc107 !important; }
 .nav-icon.text-success { color: #28a745 !important; }
 </style>
+
