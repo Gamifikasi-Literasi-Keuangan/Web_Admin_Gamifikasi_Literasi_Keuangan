@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\LeaderboardController;
+use App\Http\Controllers\LeaderboardController;
 
 // ... (Rute lain)
 

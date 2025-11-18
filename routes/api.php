@@ -6,6 +6,7 @@ use App\Http\Controllers\LeaderboardController; // <-- Impor Controller Anda
 use App\Http\Controllers\ThresholdController;
 use App\Http\Controllers\ScenarioController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\FeedbackController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,3 +26,12 @@ Route::get('/threshold', [ThresholdController::class, 'getThresholds']);
 Route::get('/leaderboard', [LeaderboardController::class, 'getLeaderboard']);
 
 Route::get('/sessions/completed', [SessionController::class, 'getCompletedSessions']);
+
+// API 28: Kirim Feedback (Trigger Log & Learning)
+Route::post('/feedback/intervention', [FeedbackController::class, 'store']);
+
+// API 30: Update Threshold Manual (Opsional, biasanya internal)
+Route::post('/threshold/update', [ThresholdController::class, 'update']);
+
+// API 29: Get Threshold (Sudah ada sebelumnya)
+Route::get('/threshold', [ThresholdController::class, 'getThresholds']);
