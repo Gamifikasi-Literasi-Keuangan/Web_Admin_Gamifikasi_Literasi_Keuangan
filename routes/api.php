@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\LeaderboardController; // <-- Impor Controller Anda
+use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\ThresholdController;
 use App\Http\Controllers\ScenarioController;
 use App\Http\Controllers\SessionController;
@@ -42,7 +42,10 @@ Route::post('/threshold/update', [ThresholdController::class, 'update']);
 
 // API 29: Get Threshold (Sudah ada sebelumnya)
 Route::get('/threshold', [ThresholdController::class, 'getThresholds']);
-//api untuk daftar list player
-Route::get('/players', [PlayerController::class, 'index']);
-//api untuk detail basic player
+
+// api untuk daftar list player
+// TELAH DIPERBAIKI: Menggunakan apiIndex() untuk API list pemain
+Route::get('/players', [PlayerController::class, 'apiIndex']); 
+
+// api untuk detail basic player
 Route::get('/players/{id}', [PlayerController::class, 'show']);
