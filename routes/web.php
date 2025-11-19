@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\LeaderboardController;
+
 
 // Main routes
 Route::get('/', function () {

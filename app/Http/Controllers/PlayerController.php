@@ -2,49 +2,70 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
+use App\Models\Player; // Dari Repan
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB; // Dari Idham
+use Illuminate\Support\Facades\Schema; // Dari Idham
 
 class PlayerController extends Controller
 {
-    // Show players list page (Blade)
+    // API 32: List Semua Pemain (Mengganti nama Repan dari index() ke apiIndex())
+    public function apiIndex()
+    {
+        // Mengambil semua pemain diurutkan dari yang terbaru
+        return response()->json(Player::orderBy('createdAt', 'desc')->get());
+    }
+
+    public function show($id)
+    {
+        // Mencari pemain berdasarkan PlayerId (bukan id auto-increment)
+        $player = Player::where('PlayerId', $id)->first();
+
+        if (!$player) {
+            return response()->json(['message' => 'Player not found'], 404);
+        }
+
+        return response()->json($player);
+    }
+    
+    // Show players list page (Blade) (Fungsi index() Idham dipertahankan)
     public function index()
     {
         return view('admin.players.index');
     }
 
-  public function rekomendasiIndex()
-{
-    $players = collect();
+    public function rekomendasiIndex()
+    {
+        $players = collect();
 
-    if (Schema::hasTable('users')) {
-        // cek kolom apa yang ada
-        $columns = Schema::getColumnListing('users');
-        
-        $query = DB::table('users')->select('id', 'name');
-        
-        // tambah kolom jika ada
-        if (in_array('locale', $columns)) {
-            $query->addSelect('locale');
-        } else {
-            $query->addSelect(DB::raw("'id' as locale"));
+        if (Schema::hasTable('users')) {
+            // cek kolom apa yang ada
+            $columns = Schema::getColumnListing('users');
+            
+            $query = DB::table('users')->select('id', 'name');
+            
+            // tambah kolom jika ada
+            if (in_array('locale', $columns)) {
+                $query->addSelect('locale');
+            } else {
+                $query->addSelect(DB::raw("'id' as locale"));
+            }
+            
+            if (in_array('created_at', $columns)) {
+                $query->addSelect('created_at');
+            } else {
+                $query->addSelect(DB::raw("'2025-01-01' as created_at"));
+            }
+            
+            // status fallback: selalu 'connected'
+            $query->addSelect(DB::raw("'connected' as status"));
+            
+            $players = $query->orderBy('name')->get();
         }
-        
-        if (in_array('created_at', $columns)) {
-            $query->addSelect('created_at');
-        } else {
-            $query->addSelect(DB::raw("'2025-01-01' as created_at"));
-        }
-        
-        // status fallback: selalu 'connected'
-        $query->addSelect(DB::raw("'connected' as status"));
-        
-        $players = $query->orderBy('name')->get();
+
+        return view('admin.rekomendasi.index', compact('players'));
     }
-
-    return view('admin.rekomendasi.index', compact('players'));
-}
 
     // API endpoint rekomendasi (sample data)
     public function recommendationNext(Request $request)
