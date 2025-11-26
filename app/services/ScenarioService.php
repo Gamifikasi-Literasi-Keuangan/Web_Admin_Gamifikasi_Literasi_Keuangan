@@ -2,23 +2,11 @@
 
 namespace App\Services;
 
-use App\Repositories\PlayerDecisionRepository;
-use App\Repositories\PlayerProfileRepository;
 use App\Models\ScenarioOption;
 use App\Models\Scenario;
 
 class ScenarioService
 {
-    protected $decisionRepo;
-    protected $profileRepo;
-
-    public function __construct(
-        PlayerDecisionRepository $decisionRepo,
-        PlayerProfileRepository $profileRepo
-    ) {
-        $this->decisionRepo = $decisionRepo;
-        $this->profileRepo = $profileRepo;
-    }
 
     public function processSubmission(array $data)
     {

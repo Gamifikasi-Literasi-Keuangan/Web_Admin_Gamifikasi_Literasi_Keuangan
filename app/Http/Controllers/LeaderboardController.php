@@ -10,42 +10,38 @@ use Illuminate\Support\Facades\Validator; // <-- Impor Validator
 class LeaderboardController extends Controller
 {
     /**
-     * API 31: GET /leaderboard
-     * Mengambil peringkat untuk papan peringkat
-     *
-     * Mode 1: Dengan session_id → Leaderboard per session
-     * Mode 2: Tanpa session_id → Leaderboard global (top players dari semua session)
+     * API 30: GET /leaderboard
+     * Menampilkan ranking pemain setelah game berakhir
+     * 
+     * Catatan: Dalam implementasi production, session_id seharusnya diambil dari:
+     * - Session context yang baru selesai
+     * - Auth token player yang aktif
+     * 
+     * Untuk sementara testing, ambil session terakhir yang selesai
      */
     public function getLeaderboard(Request $request)
     {
-        // === Validasi ===
-        $validator = Validator::make($request->all(), [
-            'session_id' => 'nullable|string|exists:sessions,sessionId', // Opsional
-            'limit' => 'sometimes|integer|min:1|max:100'
-        ]);
+        // Ambil session terakhir yang selesai (status = 'completed')
+        $latestSession = \App\Models\Session::where('status', 'completed')
+            ->orderBy('created_at', 'desc')
+            ->first();
 
-        if ($validator->fails()) {
+        if (!$latestSession) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+                'message' => 'Tidak ada session yang selesai'
+            ], 404);
         }
 
-        $sessionId = $request->input('session_id');
-        $limit = $request->input('limit', 50); // Default 50
+        $sessionId = $latestSession->sessionId;
 
-        // === Query: Conditional berdasarkan session_id ===
-        $query = ParticipatesIn::with('player:PlayerId,name')
-            ->orderBy('score', 'DESC');
+        // Ambil ranking dari session tersebut
+        $rankings = ParticipatesIn::with('player:PlayerId,name')
+            ->where('sessionId', $sessionId)
+            ->orderBy('score', 'DESC')
+            ->get();
 
-        // Jika ada session_id, filter per session
-        if ($sessionId) {
-            $query->where('sessionId', $sessionId);
-        }
-
-        $rankings = $query->limit($limit)->get();
-
-        // === Format Response ===
+        // Format Response
         $formattedRankings = $rankings->map(function ($participation, $key) {
             return [
                 'player_id' => $participation->player->PlayerId,
@@ -55,18 +51,11 @@ class LeaderboardController extends Controller
             ];
         });
 
-        // === Response ===
-        $response = [
+        return response()->json([
             'success' => true,
+            'session_id' => $sessionId,
             'rankings' => $formattedRankings,
             'generated_at' => now()->toIso8601String()
-        ];
-
-        // Tambahkan session_id jika ada
-        if ($sessionId) {
-            $response['session_id'] = $sessionId;
-        }
-
-        return response()->json($response, 200);
+        ], 200);
     }
 }
