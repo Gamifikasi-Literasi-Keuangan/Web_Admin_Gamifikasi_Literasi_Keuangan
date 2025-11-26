@@ -25,7 +25,29 @@ class PlayerProfile extends Model
     public $timestamps = true;
     const CREATED_AT = null; // Tidak ada 'created_at'
     const UPDATED_AT = 'last_updated';
-
+    
+    protected $fillable = [
+        'PlayerId',
+        'onboarding_answers',
+        'cluster',
+        'level',
+        'traits',
+        'weak_areas',
+        'recommended_focus',
+        'fuzzy_scores',
+        'lifetime_scores',
+        'decision_history',
+        'behavior_pattern',
+        'confidence_level',
+        'fuzzy_scores',
+        'ann_probabilities',
+        'last_recommendation',
+        'last_updated',
+        'thresholds',
+        'created_at',
+        'updated_at'
+    ];
+    
     /**
      * Otomatis cast kolom JSON (MySQL)
      */

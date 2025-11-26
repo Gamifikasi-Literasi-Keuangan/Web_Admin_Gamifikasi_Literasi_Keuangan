@@ -9,3 +9,32 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+
+bootstrap/cache/** linguist-vendored=true linguist-generated=true
+config/** linguist-vendored=true linguist-generated=true
+database/** linguist-vendored=true linguist-generated=true
+public/** linguist-vendored=true linguist-generated=true
+resources/** linguist-vendored=true linguist-generated=true
+storage/** linguist-vendored=true linguist-generated=true
+tests/** linguist-vendored=true linguist-generated=true
+vendor/** linguist-vendored=true linguist-generated=true
+node_modules/** linguist-vendored=true linguist-generated=true
+.editorconfig linguist-generated=true
+.gitattributes linguist-generated=true
+.gitignore linguist-generated=true
+phpunit.xml linguist-generated=true
+README.md linguist-generated=true
+webpack.mix.js linguist-generated=true
+yarn.lock linguist-generated=true
+package-lock.json linguist-generated=true
+package.json linguist-generated=true
+vite.config.js linguist-generated=true
+tsconfig.json linguist-generated=true
+babel.config.js linguist-generated=true
+tailwind.config.js linguist-generated=true
+.env.example linguist-generated=true
+.env linguist-generated=true
+.env.testing linguist-generated=true
+artisan linguist-generated=true
+composer.json linguist-generated=true
+composer.lock linguist-generated=true

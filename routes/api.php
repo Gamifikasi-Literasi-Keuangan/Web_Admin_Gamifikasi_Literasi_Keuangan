@@ -9,6 +9,9 @@ use App\Http\Controllers\SessionController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\ProfilingController;
+use App\Http\Controllers\RecommendationController;
+use App\Http\Controllers\BoardController;
+use App\Http\Controllers\CardController;
 use App\Http\Controllers\InterventionController;
 
 /*
@@ -18,6 +21,15 @@ use App\Http\Controllers\InterventionController;
 */
 Route::get('/sessions', [SessionController::class, 'index']);
 
+
+Route::get('/profiling/status', [ProfilingController::class, 'status']);
+Route::post('/profiling/submit', [ProfilingController::class, 'submit']);
+Route::get('/profiling/cluster/{playerId}', [ProfilingController::class, 'cluster']);
+
+Route::prefix('recommendation')->group(function () {
+    Route::get('/next', [RecommendationController::class, 'next']);
+    Route::get('/path', [RecommendationController::class, 'path']);
+});
 
 //API 6
 Route::get('/profiling/details', [ProfilingController::class, 'details']);
@@ -62,3 +74,4 @@ Route::post('/session/turn/start', [SessionController::class, 'startTurn']);
 Route::post('/session/player/move', [SessionController::class, 'movePlayer']);
 Route::post('/session/turn/end', [SessionController::class, 'endTurn']);
 Route::post('/session/end/{sessionId}', [SessionController::class, 'endSession']); 
+
