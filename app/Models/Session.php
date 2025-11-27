@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Session extends Model
 {
-    protected $table = 'sessions';
+    protected $table = 'game_sessions';
     protected $primaryKey = 'sessionId';
     public $incrementing = false;
     protected $keyType = 'string';
