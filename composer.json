@@ -10,7 +10,15 @@
         "google/apiclient": "^2.18",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.2",
-        "laravel/tinker": "^2.10.1"
+        "laravel/tinker": "^2.10.1",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-bcmath": "*",
+        "ext-mbstring": "*",
+        "ext-xml": "*",
+        "ext-curl": "*",
+        "ext-zip": "*",
+        "ext-gd": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
