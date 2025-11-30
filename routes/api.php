@@ -53,8 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('session')->group(function () {
         Route::get('/state', [SessionController::class, 'state']);
+        Route::post('/ping', [SessionController::class, 'ping']);
+        Route::post('/turn/start', [SessionController::class, 'startTurn']);
     });
-    
+
     Route::get('/scenarios', [ScenarioController::class, 'index']);
     Route::get('/scenario/{scenario}', [ScenarioController::class, 'show']);
     Route::post('/scenario/submit', [ScenarioController::class, 'submit']);

@@ -87,4 +87,34 @@ class SessionService {
             "positions" => $positionsData
         ];
     }
+
+    public function startTurn(string $playerId)
+    {
+        $participation = ParticipatesIn::where('playerId', $playerId)
+            ->whereHas('session', function ($query) {
+                $query->where('status', 'active');
+            })
+            ->first();
+
+        if (!$participation) {
+            return ['error' => 'Player is not in an active session'];
+        }
+
+        $session = $participation->session;
+
+        if ($session->current_player_id !== $playerId) {
+            return ['error' => 'It is not your turn yet'];
+        }
+
+        $gameState = json_decode($session->game_state, true) ?? [];
+        $gameState['turn_phase'] = 'waiting';
+        
+        $session->game_state = json_encode($gameState);
+        $session->save();
+
+        return [
+            'turn_phase' => 'waiting',
+            'turn_number' => $session->current_turn
+        ];
+    }
 }
