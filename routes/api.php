@@ -51,6 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/peer', [RecommendationController::class, 'peer']);
     });
 
+    Route::prefix('session')->group(function () {
+        Route::get('/state', [SessionController::class, 'state']);
+    });
+    
     Route::get('/scenarios', [ScenarioController::class, 'index']);
     Route::get('/scenario/{scenario}', [ScenarioController::class, 'show']);
     Route::post('/scenario/submit', [ScenarioController::class, 'submit']);
