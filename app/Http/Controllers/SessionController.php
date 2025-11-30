@@ -121,4 +121,28 @@ class SessionController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Retrieve the current turn information for the authenticated player.
+     */
+    public function currentTurn(Request $request)
+    {
+        $user = $request->user();
+        if (!$user || !$user->player) {
+            return response()->json(['error' => 'Player profile not found'], 404);
+        }
+
+        try {
+            $result = $this->sessionService->getCurrentTurn($user->player->PlayerId);
+
+            if (isset($result['error'])) {
+                return response()->json($result, 404);
+            }
+
+            return response()->json($result, 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

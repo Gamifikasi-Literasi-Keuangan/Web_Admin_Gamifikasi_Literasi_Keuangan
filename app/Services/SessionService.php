@@ -204,6 +204,7 @@ class SessionService {
                 // $participation->score += 200; 
             }
 
+            $gameState['prev_position'] = $currentPosition;
             $participation->position = $newPosition;
             $participation->save();
 
@@ -217,5 +218,66 @@ class SessionService {
                 'to_tile' => $newPosition
             ];
         });
+    }
+
+    /**
+     * Retrieve the current turn information for the authenticated player.
+     */
+    public function getCurrentTurn(string $playerId)
+    {
+        $participation = ParticipatesIn::where('playerId', $playerId)
+            ->whereHas('session', fn($q) => $q->where('status', 'active'))
+            ->with(['session.participants'])
+            ->first();
+
+        if (!$participation) {
+            return ['error' => 'Player is not in an active session'];
+        }
+
+        $session = $participation->session;
+        $gameState = json_decode($session->game_state, true) ?? [];
+
+        $currentPlayerId = $session->current_player_id;
+        $currentPlayerName = 'Unknown';
+        $currentParticipant = $session->participants->firstWhere('playerId', $currentPlayerId);
+        
+        if ($currentParticipant) {
+            $currentPlayerName = $currentParticipant->player->name;
+            $currentPos = $currentParticipant->position;
+        } else {
+            $currentPos = 0;
+        }
+
+        $tile = BoardTile::where('position_index', $currentPos)->first();
+        
+        $eventType = 'none';
+        $eventId = null;
+
+        if ($tile) {
+            $eventType = $tile->type; 
+            $linkedContent = json_decode($tile->linked_content, true);
+            $eventId = $linkedContent['id'] ?? $tile->tile_id;
+        }
+
+        $actionData = [
+            'dice_value' => $gameState['last_dice'] ?? 0,
+            'from_tile' => $gameState['prev_position'] ?? ($currentPos - ($gameState['last_dice'] ?? 0)), 
+            'to_tile' => $currentPos,
+            'landed_event_type' => $eventType,
+            'landed_event_id' => $eventId
+        ];
+
+        if ($actionData['from_tile'] < 0) {
+            $totalTiles = BoardTile::count() ?: 20; 
+            $actionData['from_tile'] += $totalTiles;
+        }
+
+        return [
+            'turn_number' => $session->current_turn,
+            'turn_phase' => $gameState['turn_phase'] ?? 'waiting',
+            'current_turn_player' => $currentPlayerName,
+            'current_turn_player_id' => $currentPlayerId,
+            'current_turn_action' => $actionData
+        ];
     }
 }
