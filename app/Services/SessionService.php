@@ -157,4 +157,65 @@ class SessionService {
             'dice_value' => $diceValue
         ];
     }
+
+    /**
+     * Move the player based on the last rolled dice.
+     */
+    public function movePlayer(string $playerId)
+    {
+        return DB::transaction(function () use ($playerId) {
+            $participation = ParticipatesIn::where('playerId', $playerId)
+                ->whereHas('session', fn($q) => $q->where('status', 'active'))
+                ->with('session')
+                ->lockForUpdate()
+                ->first();
+
+            if (!$participation) {
+                return ['error' => 'Player is not in an active session'];
+            }
+
+            $session = $participation->session;
+
+            if ($session->current_player_id !== $playerId) {
+                return ['error' => 'It is not your turn'];
+            }
+
+            $gameState = json_decode($session->game_state, true) ?? [];
+            $currentPhase = $gameState['turn_phase'] ?? 'waiting';
+
+            if ($currentPhase !== 'rolling') {
+                return ['error' => "Cannot move in '$currentPhase' phase. You need to roll dice first."];
+            }
+
+            $diceValue = $gameState['last_dice'] ?? 0;
+            if ($diceValue == 0) {
+                return ['error' => 'Dice value invalid. Please roll again.'];
+            }
+
+            $currentPosition = $participation->position;
+            
+            $totalTiles = BoardTile::count();
+            if ($totalTiles == 0) $totalTiles = 20;
+
+            $newPosition = ($currentPosition + $diceValue) % $totalTiles;
+
+            if ($newPosition < $currentPosition) {
+                // Logika "Pass Go" (Dapat uang) bisa ditaruh di sini
+                // $participation->score += 200; 
+            }
+
+            $participation->position = $newPosition;
+            $participation->save();
+
+            $gameState['turn_phase'] = 'moving';
+            $session->game_state = json_encode($gameState);
+            $session->save();
+
+            return [
+                'turn_phase' => 'moving',
+                'from_tile' => $currentPosition,
+                'to_tile' => $newPosition
+            ];
+        });
+    }
 }
