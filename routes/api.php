@@ -64,87 +64,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/player/move', [SessionController::class, 'move']);
     });
     Route::get('/tile/{id}', [BoardController::class, 'getTile']);
-    
+
     Route::get('/performance/scores', [App\Http\Controllers\PerformanceController::class, 'scores']);
     Route::post('/feedback/intervention', [FeedbackController::class, 'store']);
     Route::get('/intervention/trigger', [InterventionController::class, 'trigger']);
 
-    Route::get('/scenarios', [ScenarioController::class, 'index']);
-    Route::get('/scenario/{scenario}', [ScenarioController::class, 'show']);
-    Route::post('/scenario/submit', [ScenarioController::class, 'submit']);
-    Route::post('/threshold/update', [ThresholdController::class, 'update']);
-    Route::get('/threshold', [ThresholdController::class, 'getThresholds']);
-    Route::get('/card/quiz/{id}', [CardController::class, 'getQuizCard']);
-    Route::get('/leaderboard', [LeaderboardController::class, 'getLeaderboard']);
-});
+    Route::prefix('scenario')->group(function () {
+        Route::get('/{scenario_id}', [ScenarioController::class, 'show']);
+        Route::post('/submit', [ScenarioController::class, 'submit']);
+    });
 
-Route::get('/debug/list-matchmaking-routes', function () {
-    $routes = [];
-    foreach (Route::getRoutes() as $route) {
-        // Kita hanya cari yang url-nya mengandung 'matchmaking'
-        if (str_contains($route->uri(), 'matchmaking')) {
-            $routes[] = [
-                'method' => implode('|', $route->methods()),
-                'uri'    => $route->uri(), // Ini alamat yang HARUS Anda ketik di Postman
-                'action' => $route->getActionName(),
-            ];
-        }
-    }
-    
-    if (empty($routes)) {
-        return [
-            'status' => 'WARNING',
-            'message' => 'Tidak ada rute matchmaking yang terdaftar! Cek kode routes/api.php Anda.'
-        ];
-    }
-
-    return [
-        'status' => 'OK',
-        'registered_routes' => $routes
-    ];
-});
-
-// --- DEBUGGING MATCHMAKING (HAPUS SAAT PRODUCTION) ---
-Route::get('/debug/matchmaking', function () {
-    return [
-        'total_sessions' => \App\Models\GameSession::count(),
-        'sessions_waiting' => \App\Models\GameSession::where('status', 'waiting')->get(),
-        'all_participants' => \App\Models\ParticipatesIn::orderBy('sessionId')->orderBy('player_order')->get(),
-        'config' => \App\Models\Config::first()
-    ];
-});
-
-Route::get('/debug-sanctum', function (Request $request) {
-    $tokenString = $request->bearerToken();
-    
-    if (!$tokenString) {
-        return response()->json(['error' => 'Token tidak terbaca di header'], 400);
-    }
-
-    // 1. Cek apakah token ada di database
-    // Sanctum menyimpan hash, jadi kita harus cari berdasarkan ID token (angka depan sebelum |)
-    [$id, $token] = explode('|', $tokenString, 2);
-    $dbToken = PersonalAccessToken::find($id);
-
-    if (!$dbToken) {
-        return response()->json(['error' => 'Token ID tidak ditemukan di database personal_access_tokens'], 404);
-    }
-
-    // 2. Validasi Hash
-    if (!hash_equals($dbToken->token, hash('sha256', $token))) {
-        return response()->json(['error' => 'Hash token tidak cocok. Token salah/typo.'], 401);
-    }
-
-    // 3. Cek User Pemilik Token
-    $user = $dbToken->tokenable; // Ini memanggil model App\Models\User
-
-    return response()->json([
-        'status' => 'Token Valid secara Kriptografi',
-        'token_id' => $dbToken->id,
-        'tokenable_type_in_db' => $dbToken->tokenable_type,
-        'tokenable_id' => $dbToken->tokenable_id,
-        'user_found' => $user ? 'YA' : 'TIDAK (User mungkin terhapus dari tabel auth_users)',
-        'user_data' => $user,
-        'config_auth_model' => config('auth.providers.users.model'), // Cek config yang aktif
-    ]);
 });

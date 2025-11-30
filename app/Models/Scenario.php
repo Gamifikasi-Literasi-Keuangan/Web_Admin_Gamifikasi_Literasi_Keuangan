@@ -14,8 +14,6 @@ class Scenario extends Model
     public $incrementing = false;
     protected $keyType = 'string';
     public $timestamps = true;
-    const CREATED_AT = 'created_at';
-    const UPDATED_AT = null;
     
     protected $casts = [
         'tags' => 'array',
