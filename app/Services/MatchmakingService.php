@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\GameSession; 
+use App\Models\GameSession;
 use App\Models\ParticipatesIn;
 use App\Models\Config;
 use App\Models\Player;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
-class SessionService
+class MatchmakingService
 {
     /**
      * Logika Utama Matchmaking
@@ -101,7 +101,7 @@ class SessionService
         $playersList = $session->participants->map(function ($p)  use ($session) {
             return [
                 'player_id' => $p->playerId,
-                'username' => $p->player->name ?? 'Unknown', // Ambil dari relasi player
+                'username' => $p->player->name ?? 'Unknown',
                 'avatar_url' => $p->player->avatar_url ?? null,
                 'is_ready' => (bool) $p->is_ready,
                 'is_host' => $p->playerId === $session->host_player_id
@@ -170,14 +170,14 @@ class SessionService
                 $lobbyStatus = 'waiting_for_ready';
             }
         } else {
-            $lobbyStatus = 'waiting_for_players';
+            $lobbyStatus;
         }
 
         $playersList = $session->participants->map(function ($p) use ($session) {
             return [
                 'player_id' => $p->playerId,
                 'username' => $p->player->name ?? 'Unknown Player',
-                'character_id' => $p->player->character_id ?? 1, 
+                'character_id' => $p->player->character_id ?? 1,
                 'connected' => $p->connection_status === 'connected',
                 'is_ready' => (bool) $p->is_ready,
                 'is_host' => $p->playerId === $session->host_player_id
@@ -192,5 +192,21 @@ class SessionService
             'max_players' => $maxPlayers,
             'players' => $playersList
         ];
+    }
+
+    public function setPlayerReady(string $playerId, bool $isReady) {
+        $participation = ParticipatesIn::where('playerId', $playerId)
+            ->WhereHas('session', function ($query) {
+                $query->where('status', 'waiting');
+            })
+            ->first();
+
+        if (!$participation) {
+            throw new \Exception("Player is not in a waiting session");
+        }
+        $participation->is_ready = $isReady;
+        $participation->save();
+
+        return [ 'ok' => true ];
     }
 }
