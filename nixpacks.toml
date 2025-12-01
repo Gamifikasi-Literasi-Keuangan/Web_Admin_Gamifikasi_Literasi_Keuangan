@@ -1,25 +1,5 @@
-# nixpacks.toml
-
-# Gunakan providers agar versi Node & PHP otomatis dipilih yang kompatibel
-providers = ["php", "node"]
+[build]
+builder = "nixpacks"
 
 [variables]
-# Tentukan versi spesifik
-NODE_VERSION = "20"
-PHP_VERSION = "8.2"
-# Mencegah error 502/413 saat upload file besar
-NIXPACKS_NGINX_CLIENT_MAX_BODY_SIZE = "50M"
-
-[phases.build]
-# Urutan: Install dependencies -> Build Frontend -> Setup Laravel
-cmds = [
-    "npm ci",
-    "npm run build",
-    "composer install --optimize-autoloader --no-dev",
-    "php artisan config:cache",
-    "php artisan route:cache",
-    "php artisan view:cache"
-]
-
-[start]
-cmd = "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+PHP_EXTENSIONS = "pdo_mysql mysqli"
