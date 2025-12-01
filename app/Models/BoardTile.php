@@ -1,23 +1,22 @@
 <?php
 
-namespace App\Services;
+namespace App\Models;
 
-use App\Models\BoardTile;
+use Illuminate\Database\Eloquent\Model;
 
-class BoardService
+class BoardTile extends Model
 {
-    /**
-     * Ambil detail satu petak (tile) berdasarkan ID-nya.
-     * Ini akan menangani 'Risk', 'Chance', 'Property', 'Scenario', dll.
-     */
-    public function getTileDetails(int $id)
-    {
-        // Panggil Repository (Eloquent) -> Panggil DB
-        // findOrFail() akan otomatis melempar error 404
-        $tile = BoardTile::findOrFail($id);
-        
-        // 'details' di SQL Anda adalah JSON, Laravel otomatis
-        // akan meng-decode nya menjadi array/objek.
-        return $tile;
-    }
+    protected $table = 'boardtiles';
+    protected $primaryKey = 'tile_id';
+    public $incrementing = false;
+    public $timestamps = false;
+
+    protected $fillable = [
+        'tile_id',
+        'name',
+        'category',
+        'type',
+        'linked_content',
+        'position_index'
+    ];
 }

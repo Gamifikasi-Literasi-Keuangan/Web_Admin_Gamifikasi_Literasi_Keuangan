@@ -6,128 +6,196 @@ use App\Models\Session;
 use App\Models\ParticipatesIn;
 use App\Models\BoardTile;
 use App\Models\Turn;
-use App\Models\Player;
+use App\Models\Telemetry;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB; // Untuk transaksi
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class SessionService
 {
-    /**
-     * Implementasi Sequence Diagram: /session/turn/start
-     */
+    public function createSession(string $hostPlayerId, array $playerIds, int $maxTurns): array
+    {
+        $sessionId = Str::uuid()->toString();
+
+        DB::transaction(function () use ($sessionId, $hostPlayerId, $playerIds, $maxTurns) {
+            Session::create([
+                'session_id' => $sessionId,
+                'host_player_id' => $hostPlayerId,
+                'status' => 'waiting',
+                'turn_index' => 0,
+                'max_turns' => $maxTurns,
+            ]);
+
+            foreach ($playerIds as $index => $playerId) {
+                ParticipatesIn::create([
+                    'session_id' => $sessionId,
+                    'player_id' => $playerId,
+                    'position_index' => 0,
+                    'is_host' => ($playerId === $hostPlayerId),
+                ]);
+            }
+        });
+
+        return [
+            'session_id' => $sessionId,
+            'host_player_id' => $hostPlayerId,
+            'player_ids' => $playerIds,
+            'max_turns' => $maxTurns,
+            'status' => 'waiting',
+        ];
+    }
     public function startTurn(string $sessionId, string $playerId)
     {
-        $session = Session::findOrFail($sessionId);
-
-        // Validasi Logika Bisnis
-        if ($session->current_player_id !== $playerId) {
-            throw new \Exception("Bukan giliran pemain ini.", 403);
+        // Ambil session
+        $session = Session::find($sessionId);
+        if (!$session) {
+            throw new HttpException(404, "Session tidak ditemukan.");
         }
+
+        // Jika turn sebelumnya belum selesai
         if ($session->status === 'turn_started') {
-            throw new \Exception("Giliran sedang berjalan.", 409); // 409 Conflict
+            throw new HttpException(409, "Giliran sedang berjalan.");
         }
 
-        // Buat record giliran baru
+        // Validasi player terdaftar di session
+        $isParticipant = ParticipatesIn::where('session_id', $sessionId)
+            ->where('player_id', $playerId)
+            ->exists();
+
+        if (!$isParticipant) {
+            throw new HttpException(422, "Pemain tidak terdaftar di dalam session.");
+        }
+        $lastTurn = Turn::where('session_id', $sessionId)
+            ->orderBy('turn_number', 'desc')
+            ->first();
+        $nextTurnNumber = $lastTurn ? $lastTurn->turn_number + 1 : 1;
+        $timestamp = now();
+        $turnId = "turn" . str_pad($nextTurnNumber, 3, '0', STR_PAD_LEFT);
+
+        // Simpan turn baru
         $turn = Turn::create([
-            'turn_id' => 'turn_' . Str::uuid(),
-            'session_id' => $sessionId,
-            'player_id' => $playerId,
-            'turn_number' => $session->turn_index + 1,
+            'turn_id'      => $turnId,
+            'session_id'   => $sessionId,
+            'player_id'    => $playerId,
+            'turn_number'  => $nextTurnNumber,
+            'started_at'   => $timestamp->toDateTimeString(),
         ]);
 
-        // Update status sesi
+        // Update session
+        $session->current_player_id = $playerId;
         $session->status = 'turn_started';
         $session->save();
 
-        return $turn; // Kembalikan data giliran
-    }
-
-    /**
-     * Implementasi Sequence Diagram: /session/player/move
-     */
-    public function movePlayer(string $sessionId, string $playerId, int $fromTile, int $steps): array
-    {
-        // 1. Logika Bisnis: Hitung posisi baru
-        $newPosition = ($fromTile + $steps) % 40; // Asumsi 40 petak
-
-        // 2. Panggil Repository (Eloquent) -> Update DB `ParticipatesIn`
-        ParticipatesIn::where('sessionId', $sessionId)
-            ->where('playerId', $playerId)
-            ->update(['position' => $newPosition]);
-
-        // 3. Panggil Repository (Eloquent) -> Baca DB `board_tiles`
-        $tile = BoardTile::where('position', $newPosition)->firstOrFail();
-
-        // 4. Kembalikan data sesuai spesifikasi
         return [
-            'from_tile' => $fromTile,
-            'to_tile' => $newPosition,
-            'tile_type' => $tile->type, 
-            'next_action' => ['related_id' => $tile->related_id] // (ID skenario/kuis/dll)
+            'turn_id'         => $turnId,
+            'session_id'      => $sessionId,
+            'player_id'       => $playerId,
+            'status'          => 'started',
+            'turn_started_at' => $timestamp->toIso8601String(),
         ];
     }
 
-    /**
-     * Implementasi Sequence Diagram: /session/turn/end
-     */
-    public function endTurn(string $sessionId, string $playerId, string $turnId, array $actions = [])
+    public function movePlayer(string $sessionId, string $playerId, int $fromTile, int $steps): array
     {
-        // Gunakan Transaksi Database untuk memastikan semua update berhasil
-        return DB::transaction(function () use ($sessionId, $playerId, $turnId, $actions) {
-            // 1. Update data giliran (Turn)
+        // Validasi: player harus berada pada session
+        $isParticipant = ParticipatesIn::where('session_id', $sessionId)
+            ->where('player_id', $playerId)
+            ->exists();
+
+        if (!$isParticipant) {
+            throw new HttpException(422, "Pemain tidak terdaftar dalam session.");
+        }
+
+        // Menghitung posisi baru (board 40 petak)
+        $toTile = ($fromTile + $steps) % 40;
+
+        // Cek apakah melewati start (posisi 0)
+        $passedStart = ($fromTile + $steps) >= 40;
+
+        // Update posisi di participatesin
+        ParticipatesIn::where('session_id', $sessionId)
+            ->where('player_id', $playerId)
+            ->update(['position_index' => $toTile]);
+
+        // Ambil tile tujuan
+        $tile = BoardTile::where('position_index', $toTile)->first();
+
+        if (!$tile) {
+            throw new HttpException(404, "Tile pada posisi $toTile tidak ditemukan.");
+        }
+
+        // Bentuk data output extra
+        $nextAction = null;
+
+        if ($tile->type === "Scenario") {
+            $nextAction = [
+                "scenario_id" => $tile->linked_content
+            ];
+        }
+
+        // Ambil session untuk turn data
+        $session = Session::find($sessionId);
+
+        return [
+            "status" => "success",
+            "player_id" => $playerId,
+            "session_id" => $sessionId,
+
+            "move_result" => [
+                "from_tile" => $fromTile,
+                "to_tile" => $toTile,
+                "passed_start" => $passedStart,
+                "tile_type" => $tile->type
+            ],
+
+            "next_action" => $nextAction,
+
+            "turn" => [
+                "current_player_id" => $session->current_player_id,
+                "is_action_required" => ($tile->type === "Scenario")
+            ]
+        ];
+    }
+
+    public function endTurn(string $sessionId,string $playerId,string $turnId,int $tileId,string $tileType,array $actions,string $endedAt)   {
+        if (is_null($tileId)) {
+            throw new \Exception("tile_id tidak boleh null saat log telemetry.");
+        }
+
+        return DB::transaction(function () use (
+            $sessionId, $playerId, $turnId, $tileId, $tileType, $actions, $endedAt
+        ) {
             $turn = Turn::findOrFail($turnId);
-            $turn->end_time = now();
+            $turn->ended_at = date('Y-m-d H:i:s', strtotime($endedAt));
             $turn->save();
 
-            // 2. (Opsional) Catat 'actions' ke tabel Telemetry
-            // ... (logika untuk menyimpan 'actions' ke tabel 'telemetry') ...
+            foreach ($actions as $action) {
+                Telemetry::create([
+                    'session_id' => $sessionId,
+                    'player_id' => $playerId,
+                    'turn_id' => $turnId,
+                    'tile_id' => $tileId,
+                    'action' => $action['action'],
+                    'details' => json_encode($action, JSON_UNESCAPED_UNICODE),
+                ]);
+            }
 
-            // 3. Tentukan pemain selanjutnya
-            $session = Session::with('players')->findOrFail($sessionId); // Muat relasi players
-            $playerCount = $session->players->count();
-            
-            $nextTurnIndex = ($session->turn_index + 1) % $playerCount;
-            $nextPlayer = $session->players[$nextTurnIndex];
-            
-            // 4. Update Sesi
-            $session->turn_index = $nextTurnIndex;
-            $session->current_player_id = $nextPlayer->PlayerId;
-            $session->status = 'turn_pending'; // Menunggu pemain selanjutnya
+            $session = Session::with('players')->findOrFail($sessionId);
+            $players = $session->players;
+
+            $nextIndex = ($session->turn_index + 1) % $players->count();
+            $nextPlayer = $players[$nextIndex];
+
+            $session->turn_index = $nextIndex;
+            $session->current_player_id = $nextPlayer->player_id;
             $session->save();
 
             return [
-                'next_player_id' => $nextPlayer->PlayerId,
-                'next_turn_index' => $nextTurnIndex
+                'turn_id' => $turnId,
+                'status' => 'ended',
+                'next_player' => $nextPlayer->player_id
             ];
         });
     }
-    
-    /**
-     * Implementasi Sequence Diagram: /session/end
-     */
-    public function endSession(string $sessionId)
-    {
-        return DB::transaction(function () use ($sessionId) {
-            // 1. Update status sesi
-            $session = Session::findOrFail($sessionId);
-            $session->status = 'finished';
-            $session->ended_at = now();
-            $session->save();
 
-            // 2. Ambil ranking akhir
-            $rankings = ParticipatesIn::where('sessionId', $sessionId)
-                            ->orderBy('score', 'desc')
-                            ->get();
-            
-            // 3. Update 'gamesPlayed' di tabel 'players'
-            $playerIds = $rankings->pluck('playerId');
-            Player::whereIn('PlayerId', $playerIds)->increment('gamesPlayed');
-
-            return [
-                'sessionId' => $sessionId,
-                'status' => 'finished',
-                'rankings' => $rankings
-            ];
-        });
-    }
 }

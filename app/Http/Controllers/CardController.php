@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\CardService; // <-- Impor Service
+use App\Http\Requests\SubmitQuizRequest;
 use Illuminate\Http\Request;
 
 class CardController extends Controller
@@ -17,11 +18,27 @@ class CardController extends Controller
      */
     public function getQuizCard($id)
     {
-        // 1. Delegasikan ke Service
-        $card = $this->cardService->getQuizCard($id);
+        return response()->json($this->cardService->getQuizCard($id));
+    }
 
-        // 2. Kembalikan View (JSON)
-        // Respons JSON akan otomatis menyertakan array 'options'
-        return response()->json($card);
+    public function getRiskCard($id)
+    {
+        return response()->json($this->cardService->getRiskCard($id));
+    }
+
+    public function getChanceCard($id)
+    {
+        return response()->json($this->cardService->getChanceCard($id));
+    }
+
+    public function submitQuiz(SubmitQuizRequest $request)
+    {
+        $result = $this->cardService->submitQuiz(
+            $request->quiz_id,
+            $request->selected_option,
+            $request->decision_time_seconds
+        );
+
+        return response()->json($result);
     }
 }

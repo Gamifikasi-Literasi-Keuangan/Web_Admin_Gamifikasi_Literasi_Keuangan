@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\BoardService; // <-- Impor Service
+use App\Services\BoardService;
 use Illuminate\Http\Request;
 
 class BoardController extends Controller
@@ -17,10 +17,8 @@ class BoardController extends Controller
      */
     public function getTile($id)
     {
-        // 1. Delegasikan ke Service
         $tileData = $this->boardService->getTileDetails($id);
         
-        // 2. Kembalikan View (JSON)
         return response()->json($tileData);
     }
 }

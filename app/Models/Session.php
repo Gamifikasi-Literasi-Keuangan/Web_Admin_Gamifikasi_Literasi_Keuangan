@@ -6,34 +6,40 @@ use Illuminate\Database\Eloquent\Model;
 class Session extends Model
 {
     protected $table = 'sessions';
-    protected $primaryKey = 'sessionId';
+    protected $primaryKey = 'session_id';
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $guarded = []; // Izinkan mass assignment
 
-
-    // 1. Aktifkan timestamps agar Laravel otomatis mengisi 'created_at'
     public $timestamps = true;
-
-    // 2. Matikan 'updated_at' karena kolom ini TIDAK ADA di tabel Anda
+    const CREATED_AT = 'started_at';
     const UPDATED_AT = null;
 
-    // 3. Pastikan nama kolom created_at sesuai (defaultnya memang 'created_at', tapi kita tegaskan)
-    const CREATED_AT = 'started_at';
+    protected $fillable = [
+        'session_id',
+        'host_player_id',
+        'max_players',
+        'max_turns',
+        'current_player_id',
+        'turn_index',
+        'status',
+        'current_turn',
+        'game_state',
+        'started_at',
+        'ended_at',
+        'created_at'
+    ];
 
-    // Relasi ke pemain yang sedang giliran
     public function currentPlayer() {
-        return $this->belongsTo(Player::class, 'current_player_id', 'PlayerId');
+        return $this->belongsTo(Player::class, 'current_player_id', 'player_id');
     }
 
-    // Relasi ke semua pemain di sesi ini (via tabel pivot)
     public function players() {
-        return $this->belongsToMany(Player::class, 'ParticipatesIn', 'sessionId', 'playerId')
-                    ->withPivot('score', 'position', 'color', 'status');
+        return $this->belongsToMany(Player::class, 'participatesin', 'session_id', 'player_id')
+                    ->withPivot('player_order', 'position_index', 'score', 'connection_status', 'is_ready', 'rank', 'joined_at');
+
     }
 
-    // Relasi ke semua giliran (turns) dalam sesi ini
     public function turns() {
-        return $this->hasMany(Turn::class, 'session_id', 'sessionId');
+        return $this->hasMany(Turn::class, 'session_id', 'session_id');
     }
 }

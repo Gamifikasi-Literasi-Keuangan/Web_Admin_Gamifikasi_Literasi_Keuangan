@@ -8,7 +8,7 @@ class SubmitProfilingRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Izinkan semua orang menggunakannya (atur false jika perlu auth)
+        return true;
     }
 
     public function rules(): array

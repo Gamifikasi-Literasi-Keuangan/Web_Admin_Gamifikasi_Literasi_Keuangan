@@ -7,24 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Player extends Model
 {
     protected $table = 'players';
-    protected $primaryKey = 'PlayerId'; // Sesuai SQL
-    public $incrementing = false;     // Karena PlayerId adalah VARCHAR/string
-    protected $keyType = 'string';    // Sesuai SQL
+    protected $primaryKey = 'player_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
-    /**
-     * (WAJIB DITAMBAHKAN)
-     * Mendefinisikan relasi ke profil AI pemain.
-     */
     public function profile()
     {
-        // 'PlayerId' adalah foreign key di tabel 'PlayerProfile'
-        // dan 'PlayerId' adalah local key di tabel 'players'
-        return $this->hasOne(PlayerProfile::class, 'PlayerId', 'PlayerId');
+        return $this->hasOne(PlayerProfile::class, 'player_id', 'player_id');
     }
 
-        // ... di dalam class Player ...
     public function gameSessions() {
-        return $this->belongsToMany(Session::class, 'ParticipatesIn', 'playerId', 'sessionId')
-                    ->withPivot('score', 'position', 'color', 'status');
+        return $this->belongsToMany(Session::class, 'participatesin', 'player_id', 'session_id')
+                    ->withPivot('player_order', 'position_index', 'score', 'connection_status', 'is_ready', 'rank', 'joined_at');
     }
 }

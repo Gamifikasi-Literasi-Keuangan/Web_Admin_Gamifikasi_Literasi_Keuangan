@@ -8,8 +8,10 @@ class StartTurnRequest extends FormRequest
 {
     public function rules(): array {
     return [
-        'sessionId' => 'required|string|exists:sessions,sessionId',
-        'playerId' => 'required|string|exists:players,PlayerId',
+        'session_id' => 'required|string|exists:sessions,session_id',
+        'player_id' => 'required|string|exists:players,player_id',
+        'turn_number' => 'required|integer|min:1',
+        'timestamp' => 'required|date'
     ];
     }
 }
