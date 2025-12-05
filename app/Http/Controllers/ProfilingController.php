@@ -8,7 +8,7 @@ use App\Services\ProfilingService;
 class ProfilingController extends Controller
 {
     protected $profilingService;
-    
+
     /**
      * Konstruktor untuk ProfilingController.
      */
@@ -42,12 +42,12 @@ class ProfilingController extends Controller
         }
         $playerId = $user->player->PlayerId;
         $validatedData = $request->validated();
-        $this->profilingService->saveOnboardingAnswers([
+        $result = $this->profilingService->saveOnboardingAnswers([
             'player_id' => $playerId,
             'answers' => $validatedData['answers'],
-            'profiling_done' => $validatedData['profiling_done'] ?? false 
+            'profiling_done' => $validatedData['profiling_done'] ?? false
         ]);
-        return response()->json(['ok' => true]);
+        return response()->json($result);
     }
 
     /**
@@ -60,7 +60,7 @@ class ProfilingController extends Controller
             return response()->json(['error' => 'Player not found'], 404);
         }
         $playerId = $user->player->PlayerId;
-    
+
         $result = $this->profilingService->runProfilingCluster($playerId);
         if (isset($result['error'])) {
             return response()->json($result, 400);

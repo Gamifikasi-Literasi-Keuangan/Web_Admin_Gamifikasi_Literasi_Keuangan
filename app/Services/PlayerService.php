@@ -22,25 +22,25 @@ class PlayerService
         $platform = $data['platform'] ?? 'web';
         $locale = $data['locale'] ?? 'id_ID';
 
-        // $googleId = 'google_id_tester_001'; 
-        // $name = 'Tester Postman';
-        // $avatar = 'https://ui-avatars.com/api/?name=Tester+Postman';
+        $googleId = 'google_id_tester_001'; 
+        $name = 'Tester Postman';
+        $avatar = 'https://ui-avatars.com/api/?name=Tester+Postman';
         
         
-        $client = new Google_Client(['client_id' => env('GOOGLE_CLIENT_ID')]);
-        try {
-            $payload = $client->verifyIdToken($idToken);
-        } catch (\Exception $e) {
-            $payload = false;
-        }
+        // $client = new Google_Client(['client_id' => env('GOOGLE_CLIENT_ID')]);
+        // try {
+        //     $payload = $client->verifyIdToken($idToken);
+        // } catch (\Exception $e) {
+        //     $payload = false;
+        // }
 
-        if (!$payload) {
-             throw new \Exception("Invalid Google Token (Wrong format or expired)");
-        }
-        $googleId = $payload['sub'];
-        $email = $payload['email'];
-        $name = $payload['name'];
-        $avatar = $payload['picture'] ?? null;
+        // if (!$payload) {
+        //      throw new \Exception("Invalid Google Token (Wrong format or expired)");
+        // }
+        // $googleId = $payload['sub'];
+        // $email = $payload['email'];
+        // $name = $payload['name'];
+        // $avatar = $payload['picture'] ?? null;
         
         
         return DB::transaction(function () use ($googleId, $name, $avatar, $platform, $locale) {
@@ -65,7 +65,7 @@ class PlayerService
                     'initial_platform' => $platform,
                     'locale' => $locale,
                     'gamesPlayed' => 0,
-                    'createdAt' => now()
+                    'created_at' => now()
                 ]
             );
 

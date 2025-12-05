@@ -72,7 +72,7 @@ class RecommendationService
             return ['error' => 'Belum ada konten skenario yang tersedia di database.'];
         }
 
-            $categoryName = ucwords(str_replace('_', ' ', $weakestCategory));
+            $categoryName = ucwords(str_replace(['_dan_', '_'], [' & ', ' '], $weakestCategory));   
         
         return [
             'scenario_id'      => $bestQuestion->id,
@@ -108,7 +108,7 @@ class RecommendationService
         $totalGain = 0;
 
         foreach ($weakAreas as $area) {
-            $focusName = ucwords(str_replace(['_', 'dan'], [' ', '&'], $area));
+            $focusName = ucwords(str_replace(['_dan_', '_'], [' & ', ' '], $area));
             
             $sessions = rand(2, 3); 
             $gain = rand(10, 15);
@@ -195,7 +195,7 @@ class RecommendationService
         }
 
         if (!empty($weakAreas)) {
-            $weakest = ucwords(str_replace('_', ' ', $weakAreas[0]));
+            $weakest = ucwords(str_replace(['_dan_', '_'], [' & ', ' '], $weakAreas[0]));
             $insights[] = "Pemain yang fokus memperbaiki '$weakest' biasanya naik level 45% lebih cepat.";
         }
 

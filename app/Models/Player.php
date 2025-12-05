@@ -23,9 +23,6 @@ class Player extends Model
         'created_at'
     ];
 
-    const CREATED_AT = 'createdAt';
-    const UPDATED_AT = null;
-
     public function participations()
     {
         return $this->hasMany(ParticipatesIn::class, 'playerId', 'PlayerId');

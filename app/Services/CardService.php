@@ -43,13 +43,11 @@ class CardService
             // Ambil kategori pertama dari array categories di kartu (misal: ["Anggaran"])
             $categories = $card->categories ?? ['General'];
             $affectedCategoryKey = strtolower($categories[0] ?? 'pendapatan'); 
-            // Normalisasi key agar cocok dengan lifetime_scores (misal: "Anggaran" -> "anggaran")
             
-            // Mapping nama kategori ke key JSON scores jika perlu
             $scoreKeyMap = [
                 'anggaran' => 'anggaran',
                 'pendapatan' => 'pendapatan',
-                'tabungan' => 'tabungan_dan_dana_darurat',
+                'tabungan' => 'tabungan',
                 'utang' => 'utang',
                 'investasi' => 'investasi',
                 'asuransi' => 'asuransi_dan_proteksi',
@@ -57,24 +55,18 @@ class CardService
             ];
             $targetScoreKey = $scoreKeyMap[$affectedCategoryKey] ?? $affectedCategoryKey;
 
-            // 4. Hitung Perubahan Skor
             $currentScores = $profile->lifetime_scores ?? [];
             $oldValue = $currentScores[$targetScoreKey] ?? 0;
             $change = $card->scoreChange;
             $newValue = max(0, $oldValue + $change);
 
-            // 5. Logika Preroll (Dadu Tambahan)
-            // Jika action kartu membutuhkan lemparan dadu (misal: "random_loss")
             $dicePreroll = null;
             $possibleTiles = null;
 
             if ($card->action === 'roll_loss' || $card->action === 'random_choice') {
                 // Simulasi 3 kemungkinan hasil
-                $possibleTiles = ["Kehilangan Kecil", "Kehilangan Sedang", "Kehilangan Besar"];
-                $dicePreroll = rand(0, 2); // Server menentukan hasilnya sekarang (0, 1, atau 2)
-                
-                // (Opsional) Modifikasi scoreChange berdasarkan hasil dadu
-                // if ($dicePreroll == 2) $change *= 2; 
+                $possibleTiles = ["Makan", "Transportasi", "Nongkrong"];
+                $dicePreroll = rand(0, 2); 
             }
 
             // 6. Simpan Perubahan ke Database
@@ -142,7 +134,7 @@ class CardService
             $scoreKeyMap = [
                 'anggaran' => 'anggaran',
                 'pendapatan' => 'pendapatan',
-                'tabungan' => 'tabungan_dan_dana_darurat',
+                'tabungan' => 'tabungan',
                 'utang' => 'utang',
                 'investasi' => 'investasi',
                 'asuransi' => 'asuransi_dan_proteksi',
@@ -168,7 +160,7 @@ class CardService
             } else {
                 // Jika action standar (langsung dapat), possible_tiles bisa diisi info target
                 // Sesuai contoh request Anda: possible_tiles = ["Pendidikan"]
-                $possibleTiles = [$categories[0] ?? "Umum"]; 
+                $possibleTiles = ["Start"]; 
                 $dicePreroll = 0; // Default index 0
             }
 
@@ -253,20 +245,17 @@ class CardService
             $profile = PlayerProfile::find($playerId);
             if (!$profile) return ['error' => 'Player profile not found'];
 
-            // 4. Tentukan Kategori yang Terpengaruh
-            // Ambil dari tags pertama (misal ["Tabungan & Dana"])
             $categoryLabel = $quiz->tags[0] ?? 'pendapatan'; 
-            $scoreKey = $this->mapCategoryToScoreKey($categoryLabel);
 
             // 5. Update Skor
             $currentScores = $profile->lifetime_scores ?? [];
-            $oldVal = $currentScores[$scoreKey] ?? 0;
+            $oldVal = $currentScores[$categoryLabel] ?? 0;
             $newVal = $oldVal + $scoreChange;
             
             // Opsional: Cegah nilai negatif
             // $newVal = max(0, $newVal); 
 
-            $currentScores[$scoreKey] = $newVal;
+            $currentScores[$categoryLabel] = $newVal;
             $profile->lifetime_scores = $currentScores;
             $profile->save();
 
@@ -277,7 +266,7 @@ class CardService
             return [
                 'correct' => $isCorrect,
                 'score_change' => $scoreChange,
-                'affected_score' => $scoreKey, // Mengembalikan key teknis (misal: tabungan_dan_dana_darurat)
+                'affected_score' => $categoryLabel,
                 'new_score_value' => $newVal
             ];
         });
@@ -309,20 +298,5 @@ class CardService
             'decision_time_seconds' => $time,
             'created_at' => now()
         ]);
-    }
-
-    /**
-     * Helper: Mapping nama kategori dari Label (Tags) ke Key Database
-     */
-    private function mapCategoryToScoreKey($label)
-    {
-        $label = strtolower($label);
-        
-        if (str_contains($label, 'tabungan') || str_contains($label, 'dana')) return 'tabungan_dan_dana_darurat';
-        if (str_contains($label, 'asuransi') || str_contains($label, 'proteksi')) return 'asuransi_dan_proteksi';
-        if (str_contains($label, 'tujuan') || str_contains($label, 'jangka')) return 'tujuan_jangka_panjang';
-        
-        // Sisanya biasanya sama (pendapatan, utang, investasi, anggaran)
-        return $label;
     }
 }

@@ -293,7 +293,7 @@ class SessionService {
         return [
             'turn_number' => $session->current_turn,
             'turn_phase' => $gameState['turn_phase'] ?? 'waiting',
-            'current_turn_player' => $currentPlayerName,
+            'current_turn_player_name' => $currentPlayerName,
             'current_turn_player_id' => $currentPlayerId,
             'current_turn_action' => $actionData
         ];
