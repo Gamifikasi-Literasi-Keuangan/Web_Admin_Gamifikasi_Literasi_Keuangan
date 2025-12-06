@@ -90,23 +90,34 @@ class RecommendationService
      */
     public function getRecommendationPath(string $playerId)
     {
-        // MOCKUP for Demo/Testing based on Excel B7
-        // Return exact static data for the infinite dummy player
+        $profile = null;
+
+        // Special handling for dummy infinite profile
         if ($playerId === 'player_dummy_profiling_infinite') {
-            return [
-                "title" => "Path Optimal ke Skor 80+",
-                "current_score" => 58,
-                "target_score" => 80,
-                "steps" => [
-                    ["phase" => 1, "focus" => "Dana Darurat & Tabungan", "estimated_time" => "2-3 sesi", "estimated_gain" => "+15 poin"],
-                    ["phase" => 2, "focus" => "Utang & Paylater", "estimated_time" => "2 sesi", "estimated_gain" => "+12 poin"]
-                ],
-                "total_estimated_time" => "4-5 sesi",
-                "success_probability" => "78% berdasarkan pemain serupa"
+            // Try to find if exists, otherwise mock
+            $profile = PlayerProfile::find($playerId);
+
+            if (!$profile) {
+                $profile = new PlayerProfile();
+                $profile->PlayerId = $playerId;
+            }
+            // Inject dummy data for logic processing
+            $profile->lifetime_scores = [
+                'pendapatan' => 50,
+                'anggaran' => 60,
+                'tabungan_dan_dana_darurat' => 40,
+                'utang' => 20,
+                'investasi' => 10,
+                'asuransi_dan_proteksi' => 30,
+                'tujuan_jangka_panjang' => 50
             ];
+            $profile->weak_areas = ['utang', 'tabungan_dan_dana_darurat'];
+            $profile->confidence_level = 0.78;
+        } else {
+            $profile = PlayerProfile::find($playerId);
         }
 
-        $profile = PlayerProfile::find($playerId);
+
         if (!$profile)
             return null;
 
@@ -292,5 +303,13 @@ class RecommendationService
         }
 
         return array_values($vectorTemplate);
+    }
+    /**
+     * Menghasilkan insight rekan sebaya berdasarkan kategori
+     */
+    private function generatePeerInsight(string $category): string
+    {
+        $categoryName = ucwords(str_replace(['_dan_', '_'], [' & ', ' '], $category));
+        return "Insight: Mayoritas pemain berhasil meningkatkan skor $categoryName mereka dalam 3 sesi latihan.";
     }
 }

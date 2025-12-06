@@ -114,15 +114,27 @@ class ProfilingService
                 'last_updated' => now(),
             ]
         );
-        $calculatedFeatures = [
-            'pendapatan' => 50,
-            'anggaran' => 60,
-            'tabungan_dan_dana_darurat' => 40,
-            'utang' => 20,
-            'investasi' => 10,
-            'asuransi_dan_proteksi' => 30,
-            'tujuan_jangka_panjang' => 50
-        ];
+        if ($input['player_id'] === 'player_dummy_profiling_infinite') {
+            $calculatedFeatures = [
+                'pendapatan' => 30,
+                'anggaran' => 30,
+                'tabungan_dan_dana_darurat' => 20,
+                'utang' => 10,
+                'investasi' => 10,
+                'asuransi_dan_proteksi' => 20,
+                'tujuan_jangka_panjang' => 30
+            ];
+        } else {
+            $calculatedFeatures = [
+                'pendapatan' => 50,
+                'anggaran' => 60,
+                'tabungan_dan_dana_darurat' => 40,
+                'utang' => 20,
+                'investasi' => 10,
+                'asuransi_dan_proteksi' => 30,
+                'tujuan_jangka_panjang' => 50
+            ];
+        }
         $profilingInput = ProfilingInput::create([
             'player_id' => $input['player_id'],
             'feature' => json_encode($calculatedFeatures),
@@ -162,17 +174,6 @@ class ProfilingService
         $dynamicWeakAreas = array_map(function ($key) {
             return ucwords(str_replace(['_dan_', '_'], [' & ', ' '], $key));
         }, $lowestScores);
-
-        if ($playerId === 'player_dummy_profiling_infinite') {
-            return [
-                'cluster' => $finalClass,
-                'level' => $profileData['level'],
-                'traits' => $profileData['traits'],
-                'weak_areas' => $dynamicWeakAreas,
-                'recommended_focus' => $profileData['recommended_focus'],
-                '_note' => 'TEST MODE: Result not saved to DB'
-            ];
-        }
 
         PlayerProfile::where('PlayerId', $playerId)->update([
             'cluster' => $profileData['display_name'],
