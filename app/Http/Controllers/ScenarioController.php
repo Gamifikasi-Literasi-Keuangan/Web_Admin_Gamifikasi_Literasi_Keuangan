@@ -3,14 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Requests\ScenarioSubmitRequest;
 use App\Services\ScenarioService;
-
-// Force load to bypass potential autoloader cache issues on Railway
-// Gunakan relative path untuk memastikan file ditemukan
-$servicePath = __DIR__ . '/../../Services/ScenarioService.php';
-if (file_exists($servicePath)) {
-    require_once $servicePath;
-}
 
 class ScenarioController extends Controller
 {

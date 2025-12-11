@@ -5,12 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-
-// Force load to bypass potential autoloader cache issues
-$servicePath = __DIR__ . '/../../Services/FeedbackService.php';
-if (file_exists($servicePath)) {
-    require_once $servicePath;
-}
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+use App\Services\FeedbackService;
 
 class FeedbackController extends Controller
 {
