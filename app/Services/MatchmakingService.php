@@ -183,8 +183,7 @@ class MatchmakingService
                 'username' => $p->player->name ?? 'Unknown Player',
                 'character_id' => $p->player->character_id ?? 1,
                 'connected' => $p->connection_status === 'connected',
-                'is_ready' => (bool) $p->is_ready,
-                'is_host' => $p->playerId === $session->host_player_id
+                'is_ready' => (bool) $p->is_ready
             ];
         });
 

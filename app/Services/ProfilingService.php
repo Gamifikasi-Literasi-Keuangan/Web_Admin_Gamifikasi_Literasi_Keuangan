@@ -201,7 +201,8 @@ class ProfilingService
         ]);
 
         return [
-            'cluster' => $finalClass,
+            'cluster_id' => $finalClass,
+            'cluster_name' => $profileData['display_name'],
             'level' => $profileData['level'],
             'traits' => $profileData['traits'],
             'weak_areas' => $dynamicWeakAreas,

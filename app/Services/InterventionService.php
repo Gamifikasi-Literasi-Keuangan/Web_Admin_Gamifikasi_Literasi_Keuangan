@@ -30,7 +30,7 @@ class InterventionService
 
         $triggerLevel = 0;
         if ($consecutiveErrors >= 3) {
-            $triggerLevel = 2; 
+            $triggerLevel = 2;
         } elseif ($consecutiveErrors == 2) {
             $triggerLevel = 1;
         }
@@ -54,12 +54,22 @@ class InterventionService
             ];
         }
 
+        $dbOptions = $template->actions_template ?? [];
+
+        // Force IDs to match frontend expectations
+        if (isset($dbOptions[0])) {
+            $dbOptions[0]['id'] = 'heed';
+        }
+        if (isset($dbOptions[1])) {
+            $dbOptions[1]['id'] = 'ignore';
+        }
+
         return [
             'intervention_id' => 'intv_' . Str::random(6),
             'intervention_level' => $template->level,
             'title' => $template->title_template,
             'message' => $template->message_template,
-            'options' => $template->actions_template ?? []
+            'options' => $dbOptions
         ];
     }
 }

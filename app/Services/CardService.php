@@ -47,11 +47,12 @@ class CardService
             $scoreKeyMap = [
                 'anggaran' => 'anggaran',
                 'pendapatan' => 'pendapatan',
-                'tabungan' => 'tabungan',
+                'tabungan' => 'tabungan_dan_dana_darurat',
                 'utang' => 'utang',
                 'investasi' => 'investasi',
                 'asuransi' => 'asuransi_dan_proteksi',
-                'risiko' => 'pengeluaran_lain'
+                'risiko' => 'tabungan_dan_dana_darurat',
+                'pendidikan' => 'tujuan_jangka_panjang'
             ];
             $targetScoreKey = $scoreKeyMap[$affectedCategoryKey] ?? $affectedCategoryKey;
 
