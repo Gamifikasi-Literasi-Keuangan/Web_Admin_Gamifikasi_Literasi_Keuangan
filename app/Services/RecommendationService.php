@@ -312,6 +312,14 @@ class RecommendationService
         $top10Threshold = $allOverallScores[$top10Index];
 
         $weakAreas = $currentPlayer->weak_areas ?? [];
+        
+        // Ensure weak_areas is a proper array (handle JSON string or malformed data)
+        if (is_string($weakAreas)) {
+            $weakAreas = json_decode($weakAreas, true) ?? [];
+        }
+        if (!is_array($weakAreas)) {
+            $weakAreas = [];
+        }
 
         $insights = [];
         if ($playerScore >= $average) {
@@ -327,7 +335,7 @@ class RecommendationService
             $insights[] = "Luar biasa! Kamu termasuk dalam Top 10% pemain terbaik.";
         }
 
-        if (!empty($weakAreas)) {
+        if (!empty($weakAreas) && isset($weakAreas[0]) && is_string($weakAreas[0])) {
             $weakest = ucwords(str_replace(['_dan_', '_'], [' & ', ' '], $weakAreas[0]));
             $insights[] = "Pemain yang fokus memperbaiki '$weakest' biasanya naik level 45% lebih cepat.";
         }
